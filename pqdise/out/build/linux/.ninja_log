@@ -1,0 +1,23 @@
+# ninja log v5
+28033	28295	1740031524469436206	dEncFrontend/dEncFrontend	6d86a014a44fce60
+28021	28033	1740031524213371099	dEnc_tests/libdEnc_tests.a	e7c5240200c33491
+19122	28010	1740031524189364995	dEncFrontend/CMakeFiles/dEncFrontend.dir/main.cpp.o	e7b1647ccac1f098
+16511	26197	1740031522376900585	dEnc_tests/CMakeFiles/dEnc_tests.dir/LWRDPRF_tests.cpp.o	d198395491b46077
+16847	26091	1740031522268872773	dEnc_tests/CMakeFiles/dEnc_tests.dir/Npr03DPRF_tests.cpp.o	59ec532ee9817340
+22035	22107	1740031518287833491	dEnc/libdEnc.a	848162f5ab173b88
+1	16846	1740031513023134331	dEnc/CMakeFiles/dEnc.dir/dprf/AsymAdapDprf.cpp.o	aeb6029c5ed0d9bf
+1	42	1740031496222695055	dEnc/CMakeFiles/dEnc.dir/dprf/LWRBaseDprf.cpp.o	e8b33a2f62a24b37
+1	11751	1740031507923001164	dEnc/CMakeFiles/dEnc.dir/dprf/LWE_helper.cpp.o	62c69a07aea958f7
+20388	26981	1740031523161102218	dEncFrontend/CMakeFiles/dEncFrontend.dir/util.cpp.o	ae82a9ffa2c9c993
+3	16133	1740031512307115644	dEnc/CMakeFiles/dEnc.dir/dprf/Npr03AsymDprf.cpp.o	57cbedf744ccb73
+2	15925	1740031512103110319	dEnc/CMakeFiles/dEnc.dir/dprf/LWR_helper.cpp.o	f5eace52ef45455c
+17164	19122	1740031515303193817	dEnc_tests/CMakeFiles/dEnc_tests.dir/all.cpp.o	ce0829daac21578b
+1	16510	1740031512679125354	dEnc/CMakeFiles/dEnc.dir/dprf/LWEAdapDprf.cpp.o	de15727fad701aed
+15925	17164	1740031513343142681	dEnc_tests/CMakeFiles/dEnc_tests.dir/Common.cpp.o	d31f81a82db69db6
+2	20388	1740031516567376212	dEnc/CMakeFiles/dEnc.dir/dprf/LWRSymDprf.cpp.o	dc4da146c0190332
+2	20789	1740031516967483166	dEnc/CMakeFiles/dEnc.dir/dprf/LWRSymAdapDprf.cpp.o	e6579f8d369fb16
+2	20827	1740031517003492795	dEnc/CMakeFiles/dEnc.dir/dprf/MLWRSymAdapDprf.cpp.o	6b80647c8a5e26d1
+42	22035	1740031518211813424	dEnc/CMakeFiles/dEnc.dir/dprf/Npr03SymDprf.cpp.o	bad6768a6afa92f4
+16134	28021	1740031524201368048	dEnc_tests/CMakeFiles/dEnc_tests.dir/Compare_DPrfs.cpp.o	bf475e711d9aec4e
+11756	26237	1740031522416910886	dEnc_tests/CMakeFiles/dEnc_tests.dir/AmmrClient_tests.cpp.o	79fd2ffffecadfe4
+1	21938	1740031518115788076	dEnc/CMakeFiles/dEnc.dir/distEnc/AmmrClient.cpp.o	8fc1bfe939433dad
