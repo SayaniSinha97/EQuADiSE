@@ -1,10 +1,10 @@
 # EQuADiSE
 EQuADiSE is the abbreviation for Efficient Quantum-safe Adaptive Distributed Symmetric-key Encryption. It improves upon the existing DiSE protocol introduced by Agrawal et al. in CCS 2018 [1]. Distributed PRF (DPRF) is an important building block of DiSE. We use adaptively secure quantum-safe DPRF in order to obtain EQuADiSE from DiSE. Our proposed DPRF is based on Module Learning with Rounding (MLWR) assumption.
 
-In our implementation, we provide DPRF instantiated with (i) LWR-based DPRF, (ii) adaptive LWE-based DPRF (from [2]), (iii) adaptive DDH-based DPRF (from [3]), (iv) our proposed adaptive LWR-based DPRF and, (v) our proposed adaptive MLWR-based DPRF. We also provide DPRF implementation of threshold FHE -based DPRF (from [4]).
+In our implementation, we provide DPRF instantiated with (i) adaptive LWE-based DPRF (from [2]), (iii) adaptive DDH-based DPRF (from [3]), (iv) our proposed adaptive LWR-based DPRF and, (v) our proposed adaptive MLWR-based DPRF. We also provide DPRF implementation of threshold FHE-based DPRF (from [4]).
 
 # pqdise
-This is built over the existing DiSE library and has a dependency on cryptoTools library as well. Run the following commands on a Linux system.
+This is built over the existing DiSE library and has a dependency on cryptoTools library as well. After cloning the repository, go to the specific folder and then run the following commands on a Linux terminal.
 ```
 cd pqdise
 cmake --preset linux
@@ -15,16 +15,16 @@ Now, to run the unit tests, run
 ```
 ./dEncFrontend -u
 ```
+To see the DPRF performances, run
+```
+./dEncFrontend -comp -ld -thr 5 -total 8
+```
+Here, "-thr" option takes the value of the threshold number of parties, "-total" takes the value of the total number of parties. Use "-ld" option to see the performance of adaptive LWR-based DPRF. Replace it with "-md", "ss", "-sa", "-ad", "-ed" to see the performance comparison of "adaptive MLWR-based DPRF", "AES-based DPRF", "DDH-based DPRF", "adaptive DDH-based DPRF", "LWE-based DPRF", respectively.The option "-ld" can be replaced with other options to see the performance comparison of various DPRFs.</br></br>
 To see the encryption performance, run
 ```
-./dEncFrontend -sl -nStart 4 -nEnd 16 -nStep 2 -mf 0.5
+./dEncFrontend -ld -nStart 4 -nEnd 18 -nStep 2 -mf 0.5
 ```
-Use "-sl" option to get encryption performance using adaptive LWR-based DPRF. Replace it with "-sa", "-ad", "-ld", "-md", "-ed" to get encryption performance using "DDH-based DPRF", "adaptive DDH-based DPRF", "adaptive LWR-based DPRF", "adaptive MLWR-based DPRF", "LWE-based DPRF", respectively.<br/>
-To see just the DPRF performances, run
-```
-./dEncFrontend -comp -sl -thr 5 -total 8
-```
-"-thr" option takes the value of threshold number of parties, "-total" takes the value of total number of parties. The option "-sl" can be replaced with other options to see the performance comparison of various DPRFs.
+This shows the performance of DiSE (i.e., throughput or #encs/sec) while using different DPRFs. The option "-ld" can be replaced with other options to see the performance w.r.t. other DPRFs. Here,  with 0 < mf < 1, (T * mf, T)-DPRFs are used when T varies in the range [nStart, nEnd] with a leap of nStep.<br/></br>
 
 # TFHE_DPRF
 This is built over TFHE library [4]. You can get the performance of TFHE-based DPRF for (t,T) = (3,5) by running the following command in this folder.
