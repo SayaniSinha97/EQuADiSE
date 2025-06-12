@@ -32,7 +32,7 @@ namespace dEnc{
 		int group_count = ncr(T,t);
 		std::vector<int> parties;
 		for(int gid = 1; gid <= group_count; gid++){
-			findParties_adap(parties, gid, t, T);
+			findParties(parties, gid, t, T);
 			NTL::VectorCopy(shared_key_repo_tT[parties[0]][gid], LWRKey, dim);
 			for(int i = 1; i < t; i++){
 				NTL::random(shared_key_repo_tT[parties[i]][gid], dim);
@@ -177,7 +177,7 @@ void LWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 		
 		// std::vector<std::vector<u32>> tmp(sz, std::vector<u32>(13));
 		std::vector<std::vector<u64>> tmp(sz, std::vector<u64>(13));
-		part_eval_adap(inp_, &tmp, keyshare, logq, logq1);
+		part_eval(inp_, &tmp, keyshare, logq, logq1);
 
 		// // #pragma omp parallel for num_threads(threadnum) collapse(2)
 		for(int i = 0; i < sz; i++){
@@ -241,7 +241,7 @@ void LWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
         }
 
         for(int i = 0; i < in_.size(); i++){
-        	convert_block_to_extended_lwr_input_adap(in_[i], &inp_[i]);
+        	convert_block_to_extended_lwr_input(in_[i], &inp_[i]);
         }
 
         // #pragma omp parallel for num_threads(8) collapse(3)
@@ -280,7 +280,7 @@ void LWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 		// 	std::cout << collaborators[i] << " ";
 		// }
 		// std::cout << "\n";
-		int group_id = findGroupId_adap(collaborators, t, T);
+		int group_id = findGroupId(collaborators, t, T);
 		state->inp.push_back((u64)group_id);
 		// send this input to all parties
 		for (int i = this->partyId + 1; i < end; ++i)
@@ -298,7 +298,7 @@ void LWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 		// std::vector<u64> keyshare = this->getSubkey(group_id);
 		vec_ZZ_p keyshare = this->getSubkey(group_id);
 		// std::cout << "entering own part eval\n";
-		part_eval_adap(inp_, &state->interim_out, keyshare, logq, logq1);		
+		part_eval(inp_, &state->interim_out, keyshare, logq, logq1);		
 		
         // allocate space to store the other DPRF output shares
 		auto numRecv = (t - 1);
@@ -345,7 +345,7 @@ void LWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 						tmp[i][j] = interim_o[i][j];
 						for(int k = 0; k < numRecv; k++){
 							tmp[i][j] -= fx[k][i * 13 + j];
-							tmp[i][j] = moduloL_adap(tmp[i][j], logq1);
+							tmp[i][j] = moduloL(tmp[i][j], logq1);
 						}
 					}
 				}
@@ -354,11 +354,11 @@ void LWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 				// #pragma omp parallel for num_threads(8) collapse(2)
 				for(int i = 0; i < o.size(); i++){
 					for(int j = 0; j < 13; j++){
-						tmp[i][j] = moduloL_adap(fx[flag][i * 13 + j] - interim_o[i][j], logq1);
+						tmp[i][j] = moduloL(fx[flag][i * 13 + j] - interim_o[i][j], logq1);
 						for(int k = 0; k < numRecv; k++){
 							if(k != flag){
 								tmp[i][j] -= fx[k][i * 13 + j];
-								tmp[i][j] = moduloL_adap(tmp[i][j], logq1);
+								tmp[i][j] = moduloL(tmp[i][j], logq1);
 							}
 						}
 					}
@@ -368,7 +368,7 @@ void LWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 			for(int j = 0; j < o.size(); j++){
 				for(int k = 0; k < 13; k++){
 					// tmp[j][k] = moduloL(tmp[j][k], q1);
-					final_o[j][k] = round_toL_adap(tmp[j][k], logq1, logp);
+					final_o[j][k] = round_toL(tmp[j][k], logq1, logp);
 				}
 			}
 			// #pragma omp parallel for num_threads(8)

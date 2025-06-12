@@ -5,7 +5,6 @@
 #include <dEnc/dprf/Npr03SymDprf.h>
 #include <dEnc/dprf/Npr03AsymDprf.h>
 #include <dEnc/dprf/AsymAdapDprf.h>
-#include <dEnc/dprf/LWRSymDprf.h>
 #include <dEnc/dprf/LWRSymAdapDprf.h>
 #include <dEnc/dprf/MLWRSymAdapDprf.h>
 #include <dEnc/dprf/LWEAdapDprf.h>
@@ -106,38 +105,6 @@ void eval(std::vector<AmmrClient<DPRF>>& encs, u64 n, u64 m, u64 blockCount, u64
         << std::endl;
 
 }
-
-void mySymLWRClient_Perf_test(u64 n, u64 m, u64 blockCount, u64 trials, u64 numAsync, u64 batch, bool lat){
-    // set up the networking
-    oc::IOService ios;
-    std::vector<GroupChannel> eps(n);
-    for (u64 i = 0; i < n; ++i)
-        eps[i].connect(i, n, ios);
-
-    // allocate the DPRFs and the encryptors
-    std::vector<AmmrClient<LWRSymDprf>> encs(n);
-    std::vector<LWRSymDprf> dprfs(n);
-
-    // Initialize the parties using a random seed from the OS.
-    oc::PRNG prng(oc::sysRandomSeed());
-
-    // Generate the master key for this DPRF.
-    LWRSymDprf::KeyGen(n, m);
-
-    // std::cout << "here\n";
-    // initialize the DPRF and the encrypters
-    for (u64 i = 0; i < n; ++i)
-    {
-        auto& e = eps[i];
-        dprfs[i].init(i, e.mRequestChls, e.mListenChls);
-        // std::cout << "there\n";
-        encs[i].init(i, prng.get<block>(), &dprfs[i]);
-    }
-
-    // // Perform the benchmark.                                          
-    eval(encs, n, m, blockCount, batch, trials, numAsync, lat, "SymLWR      ");
-}
-
 
 void mySymLWRAdapClient_Perf_test(int n, int m, u64 blockCount, u64 trials, u64 numAsync, u64 batch, bool lat){
     // set up the networking
@@ -372,13 +339,7 @@ int main(int argc, char** argv)
     if(cmd.isSet("comp")){
         int n = cmd.get<int>("total");
         int m = cmd.get<int>("thr");
-        if(cmd.isSet("sl")){
-            compare_partial_evaluations_LWR(2, m, n, 4294967296, 268435456); //q = 2^32, q1 = 2^28
-        }
-        // else if(cmd.isSet("lb")){
-        //     compare_partial_evaluations_BaseLWR(2, m, n, 32); //q = 2^32
-        // }
-        else if(cmd.isSet("ld")){
+        if(cmd.isSet("ld")){
             compare_partial_evaluations_AdapLWR(2, m, n, 64, 42); //q = 2^64, q1 = 2^42
         }
         else if(cmd.isSet("ss")){
@@ -394,7 +355,7 @@ int main(int argc, char** argv)
             compare_partial_evaluations_AdapMLWR_batch(2, m, n, 64, 42); //q = 2^64, q1 = 2^42
         }
         else if(cmd.isSet("ed")){
-            compare_partial_evaluations_AdapLWE(2, m, n, 64, 30); //q = 2^64, q1 = 2^30
+            compare_partial_evaluations_AdapLWE(2, m, n, 32, 28); //q = 2^32, q1 = 2^28
         }
         return 0;
     }
@@ -481,7 +442,6 @@ int main(int argc, char** argv)
             << "\n"
             << "Protocol flags:\n"
             << " -" << shSym << "  to run `weakly malicious` protocol with an AES based DPRF.\n"
-            << " -" << shSymLWR << " to run 'weakly malicious` protocol with an LWR based DPRF.\n"
             << " -" << shSymAdapLWR << " to run 'weakly malicious` protocol with an adaptive LWR based DPRF.\n"
             << " -" << shSymAdapMLWR << " to run 'weakly malicious` protocol with an adaptive MLWR based DPRF.\n"
             << " -" << shSymAdapLWE << " to run 'weakly malicious` protocol with an adaptive LWE based DPRF.\n"
@@ -522,7 +482,6 @@ int main(int argc, char** argv)
             if (cmd.isSet(shSym))  AmmrSymClient_tp_Perf_test(n, m, size, t, a, b, l);
             if (cmd.isSet(shAsym)) AmmrAsymSHClient_Perf_test(n, m, size, t, a, b, l);
             if (cmd.isSet(shAsymAdap)) AsymSHAdapClient_Perf_test(n, m, size, t, a, b, l);
-            if (cmd.isSet(shSymLWR)) mySymLWRClient_Perf_test(n, m, size, t, a, b, l);
             if (cmd.isSet(shSymAdapLWR)) mySymLWRAdapClient_Perf_test(n, m, size, t, a, b, l);
             if (cmd.isSet(shSymAdapMLWR)) mySymMLWRAdapClient_Perf_test(n, m, size, t, a, b, l);
             if (cmd.isSet(shSymAdapLWE)) mySymLWEAdapClient_Perf_test(n, m, size, t, a, b, l);

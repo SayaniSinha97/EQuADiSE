@@ -33,7 +33,7 @@ namespace dEnc{
 		int group_count = ncr(T,t);
 		std::vector<int> parties;
 		for(int gid = 1; gid <= group_count; gid++){
-			findParties_adap(parties, gid, t, T);
+			findParties(parties, gid, t, T);
 			for(int i = 0; i < t; i++){
 				shared_key_repo_tT[parties[i]][gid].SetLength(rank);
 			}
@@ -290,7 +290,7 @@ void MLWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 		// 	std::cout << collaborators[i] << " ";
 		// }
 		// std::cout << "\n";
-		int group_id = findGroupId_adap(collaborators, t, T);
+		int group_id = findGroupId(collaborators, t, T);
 		state->inp.push_back((u64)group_id);
 		// send this input to all parties
 		for (int i = this->partyId + 1; i < end; ++i)
@@ -355,7 +355,7 @@ void MLWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 						tmp[i][j] = interim_o[i][j];
 						for(int k = 0; k < numRecv; k++){
 							tmp[i][j] -= fx[k][i * dim + j];
-							tmp[i][j] = moduloL_adap(tmp[i][j], logq1);
+							tmp[i][j] = moduloL(tmp[i][j], logq1);
 						}
 					}
 				}
@@ -363,11 +363,11 @@ void MLWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 			else{
 				for(int i = 0; i < interim_o.size(); i++){
 					for(int j = 0; j < dim; j++){
-						tmp[i][j] = moduloL_adap(fx[flag][i * dim + j] - interim_o[i][j], logq1);
+						tmp[i][j] = moduloL(fx[flag][i * dim + j] - interim_o[i][j], logq1);
 						for(int k = 0; k < numRecv; k++){
 							if(k != flag){
 								tmp[i][j] -= fx[k][i * dim + j];
-								tmp[i][j] = moduloL_adap(tmp[i][j], logq1);
+								tmp[i][j] = moduloL(tmp[i][j], logq1);
 							}
 						}
 					}
@@ -376,7 +376,7 @@ void MLWRSymAdapDprf::serveOne(span<u8> rr, u64 chlIdx){
 			for(int j = 0; j < interim_o.size(); j++){
 				for(int k = 0; k < dim; k++){
 					// tmp[j][k] = moduloL(tmp[j][k], q1);
-					final_o[j][k] = round_toL_adap(tmp[j][k], logq1, logp);
+					final_o[j][k] = round_toL(tmp[j][k], logq1, logp);
 				}
 			}
 			

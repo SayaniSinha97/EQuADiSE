@@ -38,7 +38,7 @@ namespace dEnc{
 		std::vector<int> parties;
 		oc::PRNG prng(oc::sysRandomSeed());
 		for(int gid = 1; gid <= group_count; gid++){
-			findParties_adap(parties, gid, t, T);
+			findParties(parties, gid, t, T);
 			shared_key_repo_tT[parties[0]][gid] = LWEKey;
 			// NTL::VectorCopy(shared_key_repo_tT[parties[0]][gid], LWRKey, dim);
 			for(int i = 1; i < t; i++){
@@ -184,7 +184,7 @@ namespace dEnc{
         		inp_[i][j].SetLength(dim_);
         	}
         }
-		
+
 		// // int threadnum = t <= 2 ? 4 : 2;
 		// // int threadnum = 2;
 		// // #pragma omp parallel for num_threads(threadnum) collapse(3)
@@ -202,7 +202,7 @@ namespace dEnc{
 		// // #pragma omp parallel for num_threads(threadnum) collapse(2)
 		for(int i = 0; i < sz; i++){
 			for(int j = 0; j < dim_; j++){
-				fx[i * dim_ + j] = tmp[i][j];
+				fx[i * dim_ + j] = (u32)tmp[i][j];
 			}
 		}
 		mListenChls[chlIdx].asyncSend(fx);
@@ -299,7 +299,7 @@ namespace dEnc{
 		// 	std::cout << collaborators[i] << " ";
 		// }
 		// std::cout << "\n";
-		int group_id = findGroupId_adap(collaborators, t, T);
+		int group_id = findGroupId(collaborators, t, T);
 		state->inp.push_back((u64)group_id);
 		// send this input to all parties
 		for (int i = this->partyId + 1; i < end; ++i)
@@ -370,7 +370,7 @@ namespace dEnc{
 						tmp[i][j] = interim_o[i][j];
 						for(int k = 0; k < numRecv; k++){
 							tmp[i][j] -= fx[k][i * dim_ + j];
-							tmp[i][j] = moduloL_adap(tmp[i][j], logq1);
+							tmp[i][j] = moduloL(tmp[i][j], logq1);
 						}
 					}
 				}
@@ -379,11 +379,11 @@ namespace dEnc{
 				#pragma omp parallel for num_threads(THREADNUM) collapse(2)
 				for(int i = 0; i < o.size(); i++){
 					for(int j = 0; j < dim_; j++){
-						tmp[i][j] = moduloL_adap(fx[flag][i * dim_ + j] - interim_o[i][j], logq1);
+						tmp[i][j] = moduloL(fx[flag][i * dim_ + j] - interim_o[i][j], logq1);
 						for(int k = 0; k < numRecv; k++){
 							if(k != flag){
 								tmp[i][j] -= fx[k][i * dim_ + j];
-								tmp[i][j] = moduloL_adap(tmp[i][j], logq1);
+								tmp[i][j] = moduloL(tmp[i][j], logq1);
 							}
 						}
 					}
@@ -393,7 +393,7 @@ namespace dEnc{
 			for(int j = 0; j < o.size(); j++){
 				for(int k = 0; k < dim_; k++){
 					// tmp[j][k] = moduloL(tmp[j][k], q1);
-					final_o[j][k] = round_toL_adap(tmp[j][k], logq1, logp);
+					final_o[j][k] = round_toL(tmp[j][k], logq1, logp);
 				}
 			}
 			

@@ -6,7 +6,6 @@
 #include "dEnc/dprf/Npr03AsymDprf.h"
 #include "dEnc/dprf/AsymAdapDprf.h"
 #include "dEnc/dprf/Npr03SymDprf.h"
-#include "dEnc/dprf/LWRSymDprf.h"
 #include "dEnc/dprf/LWRSymAdapDprf.h"
 #include "dEnc/dprf/MLWRSymAdapDprf.h"
 #include "dEnc/dprf/LWEAdapDprf.h"
@@ -405,18 +404,22 @@ namespace dEnc
 		mDprf->close();
 	}
 
-    
+    // DDH-based DPRF
     template class AmmrClient<Npr03AsymDprf>;
 
+	// Adaptive DDH-based DPRF
     template class AmmrClient<AsymAdapDprf>;
 
+	// AES-based DPRF
     template class AmmrClient<Npr03SymDprf>;
 
-    template class AmmrClient<LWRSymDprf>;
-
+	// Adaptive LWR-based DPRF
     template class AmmrClient<LWRSymAdapDprf>;
 
+	// Adaptive MLWR-based DPRF
     template class AmmrClient<MLWRSymAdapDprf>;
 
+    // Adaptive LWE-based DPRF
     template class AmmrClient<LWEAdapDprf>;
+
 }

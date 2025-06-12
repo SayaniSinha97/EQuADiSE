@@ -3,7 +3,6 @@
 #include <omp.h>
 #include <random>
 #include <dEnc/dprf/Dprf.h>
-#include <dEnc/dprf/LWRSymDprf.h>
 #include <dEnc/dprf/LWRSymAdapDprf.h>
 #include <dEnc/dprf/MLWRSymAdapDprf.h>
 #include <dEnc/dprf/LWEAdapDprf.h>
@@ -55,7 +54,7 @@ namespace dEnc{
 		
 		for(int i = 0; i < share_count; i++){
 			NTL::random(key_shares[i], n);
-			findParties_adap(parties, i+1, T-t+1, T);
+			findParties(parties, i+1, T-t+1, T);
 			// std::cout << "(T-t+1) sized set:\n";
 			// for(int j = 0; j < parties.size(); j++){
 			// 	std::cout << parties[j] << " ";
@@ -77,7 +76,7 @@ namespace dEnc{
 	std::vector<int> get_key_ids_to_use(int cur_partyid, int gid, int t, int T, std::vector<std::vector<int>> allocation_matrix){
 		std::vector<int> key_ids;
 		std::vector<int> parties;
-		findParties_adap(parties, gid, t, T);
+		findParties(parties, gid, t, T);
 		int share_count = ncr(T, T-t+1);
 		int per_party_share_count = ncr(T-1, T-t);
 		std::vector<int> ifAllocated;
@@ -275,7 +274,7 @@ namespace dEnc{
     		inp = prng.get<block>();
     		std::cout << "Iter " << it << " starts.\n";
 			for(int group_id = 1; group_id <= iters2; group_id++){
-				findParties_adap(collaborators, group_id, t, T);
+				findParties(collaborators, group_id, t, T);
 				Point final_res = zero;
 				// std::cout << "initial value of final_res: " << final_res << "\n";
 				struct timespec finaleval_start = {0, 0};
@@ -382,7 +381,7 @@ namespace dEnc{
 
     		std::cout << "Iter " << it << " starts.\n";
 			for(int group_id = 1; group_id <= iters2; group_id++){
-				findParties_adap(collaborators, group_id, t, T);
+				findParties(collaborators, group_id, t, T);
 				Point final_res = zero;
 				struct timespec finaleval_start = {0, 0};
 				struct timespec finaleval_end = {0, 0};
@@ -478,7 +477,7 @@ namespace dEnc{
     		std::cout << "Iter " << it << " starts.\n";
 			for(int group_id = 1; group_id <= iters2; group_id++){
 				// find the party-ids present in a t-sized subset with group id = group_id
-				findParties_adap(collaborators, group_id, t, T);
+				findParties(collaborators, group_id, t, T);
 
 				// assign key shares (to be used in partial evaluation) to parties in the particular t-sized subset
 				for(int i = 0, r = (T - 1), s = (t - 1); i < t; i++, r--, s--){
@@ -531,244 +530,6 @@ namespace dEnc{
 		std::cout << "============== avg final eval time (in nanoseconds): " << final_eval_time / (iters * iters2) << "\n";
 		free(partial_eval_time);
 	}
-
-	void compare_partial_evaluations_LWR(int iters, int t, int T, u64 q, u64 q1){
-		std::cout << "inside compare_partial_evaluations LWR:\n";
-		int p = 1024;
-		int n = 512;
-		int logp = log2(p);
-		int logq = log2(q);
-		int logq1 = log2(q1);
-		std::cout << logq << " " << logq1 << "\n";
-		using namespace NTL;
-
-		oc::PRNG prng(oc::sysRandomSeed());
-
-		block inp;
-
-		// Set ZZ_p modulus equal to q
-		ZZ_p::init(conv<ZZ>(q));
-
-		// Storage for extended input
-		std::vector<vec_ZZ_p> extended_inp;;
-		extended_inp.resize(13);
-		for(int i = 0; i < 13; i++){
-			extended_inp[i].SetLength(n);
-		}
-
-		// Storage for the key and key shares
-		vec_ZZ_p key;
-		std::vector<vec_ZZ_p> key_shares;
-		key_shares.resize(t);
-		for(auto &key_share: key_shares) key_share.SetLength(n);
-
-		block outp;
-		block dir_res;
-
-		// Storage for combining partial evaluations from t parties
-		std::vector<u32> combined_eval;
-		combined_eval.resize(13);
-
-		// Storage for modulo-p combined result, which further gets converted to block
-		std::vector<u16> tmp_result;
-		tmp_result.resize(13);
-
-		// Storage for each of the partial evaluations of the DPRF by t parties
-		std::vector<std::vector<u32>> part_evals;
-		part_evals.resize(t);
-		for(int i = 0; i < t; i++){
-			part_evals[i].resize(13);
-		}
-
-		// this array stores the time required by each party of the t-sized subset to perform the partial evaluation
-		u64 *partial_eval_time = (u64*)calloc(t, sizeof(u64));
-
-		// time required for final combination
-		u64 final_eval_time = 0;
-
-		// temporary variable to store partial/final evaluation time at some iteration
-		u64 part_reqd_time, final_reqd_time;
-
-		// number of possible t-sized subsets out of T parties
-		u64 group_count = ncr(T,t);
-
-		// if group_count is too big, we just go for 100000 t-sized subset and average the partial evaluation time over those values
-		u64 iters2 = std::min(group_count, (u64)1000);
-		std::cout << "iters2: " << iters2 << "\n";
-		for(int it = 0; it < iters; it++){
-			std::cout << "Iter " << it << " starts.\n";
-
-			// initialize a random ZZ_p key with modulus q
-			random(key, n);
-
-			// initialize the input block
-			inp = prng.get<block>();
-
-			convert_block_to_extended_lwr_input(inp, &(extended_inp));
-			direct_eval_single(extended_inp, &dir_res, key, q, p);
-			// std::cout << "dir_res: " << dir_res << "\n";
-			// for(int i = 0; i < sz; i++){
-			// 	std::cout << dir_res[i] << " ";
-			// }
-			// std::cout << "\n";
-
-			for(u64 group_id = 1; group_id <= iters2; group_id++){
-				generate_shares(key_shares, t, T, q, n, key);
-
-				for(int i = 0; i < t; i++){
-					struct timespec parteval_start = {0, 0};
-					struct timespec parteval_end = {0, 0};
-					clock_gettime(CLOCK_MONOTONIC, &parteval_start);
-					// part_eval_extended_multiple2(inp_arr, &part_evals[i], key_shares[i], q, q1, t);
-					part_eval_single(extended_inp, &part_evals[i], key_shares[i], q, q1);
-					clock_gettime(CLOCK_MONOTONIC, &parteval_end);
-					part_reqd_time = (((double)parteval_end.tv_nsec + 1.0e+9 * parteval_end.tv_sec) - ((double)parteval_start.tv_nsec + 1.0e+9 * parteval_start.tv_sec)) * 1.0e-3;
-					// std::cout << part_reqd_time << "\n";
-					partial_eval_time[i] += part_reqd_time;
-				}
-				// ZZ_p::init(conv<ZZ>(q1));
-				struct timespec finaleval_start = {0, 0};
-				struct timespec finaleval_end = {0, 0};
-				clock_gettime(CLOCK_MONOTONIC, &finaleval_start);
-				// #pragma omp parallel for num_threads(8) collapse(2)
-				for(int j = 0; j < 13; j++){
-					combined_eval[j] = part_evals[0][j];
-					for(int k = 1; k < t; k++){
-						combined_eval[j] -= part_evals[k][j];
-						// combined_eval[j] = moduloL(combined_eval[j], q1);
-						combined_eval[j] = moduloL_adap(combined_eval[j], logq1);
-					}
-					// tmp_result[j] = round_toL(combined_eval[j], q1, p);
-					tmp_result[j] = round_toL_adap(combined_eval[j], logq1, logp);
-				}
-				outp = decimal_array_to_single_block(tmp_result);
-				// std::cout << "dist eval: " << outp << "\n";
-				clock_gettime(CLOCK_MONOTONIC, &finaleval_end);
-
-				final_reqd_time = ((double)finaleval_end.tv_nsec + 1.0e+9 * finaleval_end.tv_sec) - ((double)finaleval_start.tv_nsec + 1.0e+9 * finaleval_start.tv_sec);
-				final_eval_time += final_reqd_time;
-				// std::cout << "dist_eval: " << outp << "\n";
-				// for(int i = 0; i < sz; i++){
-				// 	std::cout << outp[i] << " ";
-				// }
-				// std::cout << "\n";
-			}
-		}
-		for(int i = 0; i < t; i++){
-			// std::cout << "i: " << i << ", total part eval time: " << partial_eval_time[i] << "\n";
-			partial_eval_time[i] = partial_eval_time[i] / (iters * iters2);
-			std::cout << "i: " << i << ", avg part eval time (in microseconds): " << partial_eval_time[i] << "\n";
-		}
-		std::cout << "============== avg final eval time (in nanoseconds): " << final_eval_time / (iters * iters2) << "\n"; 
-		free(partial_eval_time);
-	}
-
-	void compare_partial_evaluations_BaseLWR(int iters, int t, int T, int logq){
-		std::cout << "inside compare_partial_evaluations BaseLWR:\n";
-		int logp = 10;
-		int n = 512;
-		using namespace NTL;
-
-		oc::PRNG prng(oc::sysRandomSeed());
-
-		block inp, final_res;
-
-		// Set ZZ_p modulus equal to q
-		ZZ_p::init(conv<ZZ>(pow(2,logq)));
-
-		// Storage for extended input
-		std::vector<vec_ZZ_p> extended_inp;;
-		extended_inp.resize(13);
-		for(int i = 0; i < 13; i++){
-			extended_inp[i].SetLength(n);
-		}
-
-		std::vector<int> collaborators;
-
-		std::vector<NTL::vec_ZZ_p> key_shares;
-		std::vector<std::vector<int>> allocation_matrix;
-
-		std::vector<NTL::vec_ZZ_p> cur_key_list;
-
-		generate_shares_base_adap(key_shares, t, T, logq, n, allocation_matrix);
-
-		// Storage for each of the partial evaluations of the DPRF by t parties
-		std::vector<block> part_evals;
-		part_evals.resize(t);
-
-		// this array stores the time required by each party of the t-sized subset to perform the partial evaluation
-		u64 *partial_eval_time = (u64*)calloc(t, sizeof(u64));
-
-		// time required for final combination
-		u64 final_eval_time = 0;
-
-		// temporary variable to store partial/final evaluation time at some iteration
-		u64 part_reqd_time, final_reqd_time;
-
-		// number of possible t-sized subsets out of T parties
-		u64 group_count = ncr(T,t);
-
-		// if group_count is too big, we just go for 100000 t-sized subset and average the partial evaluation time over those values
-		u64 iters2 = std::min(group_count, (u64)1000);
-		std::cout << "iters2: " << iters2 << "\n";
-    	for(int it = 0; it < iters; it++){
-    		std::cout << "Iter " << it << " starts.\n";
-
-    		inp = prng.get<block>();
-			convert_block_to_extended_lwr_input(inp, &(extended_inp));
-    		
-			for(int group_id = 1; group_id <= iters2; group_id++){
-				// find the party-ids present in a t-sized subset with group id = group_id
-				findParties_adap(collaborators, group_id, t, T);
-				// std::cout << "collaborators: \n";
-				// for(int i = 0; i < t; i++){
-				// 	std::cout << collaborators[i] << " ";
-				// }
-				// std::cout << "\n";
-
-				for(int i = 0; i < t; i++){
-					struct timespec parteval_start = {0, 0};
-					struct timespec parteval_end = {0, 0};
-					std::vector<int> key_ids = get_key_ids_to_use(collaborators[i], group_id, t, T, allocation_matrix);
-					// std::cout << "keyids of i = " << i << ":\n";
-					// for(int l = 0; l < key_ids.size(); l++){
-					// 	std::cout << key_ids[l] << " ";
-					// }
-					// std::cout << "\n";
-					cur_key_list.clear();
-					for(int j = 0; j < key_ids.size(); j++){
-						cur_key_list.push_back(key_shares[key_ids[j]]);
-					}
-					clock_gettime(CLOCK_MONOTONIC, &parteval_start);
-					part_eval_base_lwr(extended_inp, &part_evals[i], cur_key_list, logq, logp);
-					clock_gettime(CLOCK_MONOTONIC, &parteval_end);
-					part_reqd_time = (((double)parteval_end.tv_nsec + 1.0e+9 * parteval_end.tv_sec) - ((double)parteval_start.tv_nsec + 1.0e+9 * parteval_start.tv_sec)) * 1.0e-3;
-					partial_eval_time[i] += part_reqd_time;
-				}
-
-				final_res = oc::ZeroBlock;
-				struct timespec finaleval_start = {0, 0};
-				struct timespec finaleval_end = {0, 0};
-
-				clock_gettime(CLOCK_MONOTONIC, &finaleval_start);
-				for(int i = 0; i < t; i++){
-					final_res = final_res ^ part_evals[i];
-				}
-				clock_gettime(CLOCK_MONOTONIC, &finaleval_end);
-				// std::cout << final_res << "\n";
-				final_reqd_time = ((double)finaleval_end.tv_nsec + 1.0e+9 * finaleval_end.tv_sec) - ((double)finaleval_start.tv_nsec + 1.0e+9 * finaleval_start.tv_sec);
-				final_eval_time += final_reqd_time;
-			}
-    	}
-    	for(int i = 0; i < t; i++){
-			// std::cout << "i: " << i << ", total part eval time (in microseconds): " << partial_eval_time[i] << "\n";
-			partial_eval_time[i] = partial_eval_time[i] / (iters * iters2);
-			std::cout << "i: " << i << ", avg part eval time (in microseconds): " << partial_eval_time[i] << "\n";
-		}
-		std::cout << "============== avg final eval time (in nanoseconds): " << final_eval_time / (iters * iters2) << "\n";
-		free(partial_eval_time);
-	}
-
 
 	void compare_partial_evaluations_AdapLWR(int iters, int t, int T, int logq, int logq1){
 		std::cout << "inside compare_partial_evaluations AdapLWR:\n";
@@ -838,8 +599,8 @@ namespace dEnc{
 			// initialize the input block
 			inp = prng.get<block>();
 
-			convert_block_to_extended_lwr_input_adap(inp, &(extended_inp));
-			direct_eval_single_adap(extended_inp, &dir_res, key, logq, logp);
+			convert_block_to_extended_lwr_input(inp, &(extended_inp));
+			direct_eval_single(extended_inp, &dir_res, key, logq, logp);
 			// std::cout << "dir_res: " << dir_res << "\n";
 			// for(int i = 0; i < sz; i++){
 			// 	std::cout << dir_res[i] << " ";
@@ -853,7 +614,7 @@ namespace dEnc{
 					struct timespec parteval_start = {0, 0};
 					struct timespec parteval_end = {0, 0};
 					clock_gettime(CLOCK_MONOTONIC, &parteval_start);
-					part_eval_single_adap(extended_inp, &part_evals[i], key_shares[i], logq, logq1);
+					part_eval_single(extended_inp, &part_evals[i], key_shares[i], logq, logq1);
 					clock_gettime(CLOCK_MONOTONIC, &parteval_end);
 					part_reqd_time = (((double)parteval_end.tv_nsec + 1.0e+9 * parteval_end.tv_sec) - ((double)parteval_start.tv_nsec + 1.0e+9 * parteval_start.tv_sec)) * 1.0e-3;
 					partial_eval_time[i] += part_reqd_time;
@@ -865,9 +626,9 @@ namespace dEnc{
 					combined_eval[j] = part_evals[0][j];
 					for(int k = 1; k < t; k++){
 						combined_eval[j] -= part_evals[k][j];
-						combined_eval[j] = moduloL_adap(combined_eval[j], logq1);
+						combined_eval[j] = moduloL(combined_eval[j], logq1);
 					}
-					tmp_result[j] = round_toL_adap(combined_eval[j], logq1, logp);
+					tmp_result[j] = round_toL(combined_eval[j], logq1, logp);
 				}
 				outp = decimal_array_to_single_block(tmp_result);
 				clock_gettime(CLOCK_MONOTONIC, &finaleval_end);
@@ -1170,11 +931,11 @@ namespace dEnc{
 				for(int i = 0; i < dim; i++){
 					for(int j = 1; j < t; j++){
 						combined_eval[i] -= part_evals[j][i];
-						combined_eval[i] = moduloL_adap(combined_eval[i], logq1);
+						combined_eval[i] = moduloL(combined_eval[i], logq1);
 					}
 				}
 				for(int i = 0; i < dim; i++){
-					tmp_result[0][i] = round_toL_adap(combined_eval[i], logq1, logp);
+					tmp_result[0][i] = round_toL(combined_eval[i], logq1, logp);
 				}
 
 				poln_to_multiple_blocks(outp, tmp_result);
@@ -1319,9 +1080,9 @@ namespace dEnc{
 						combined_eval[j] = part_evals[0][j];
 						for(int k = 1; k < t; k++){
 							combined_eval[j] -= part_evals[k][j];
-							combined_eval[j] = moduloL_adap(combined_eval[j], logq1);
+							combined_eval[j] = moduloL(combined_eval[j], logq1);
 						}
-						tmp_result[j] = round_toL_adap(combined_eval[j], logq1, logp);
+						tmp_result[j] = round_toL(combined_eval[j], logq1, logp);
 					}
 				}
 				// for(int i = 0; i < 10; i++){

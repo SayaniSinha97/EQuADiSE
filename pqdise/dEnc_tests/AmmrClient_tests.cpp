@@ -4,10 +4,8 @@
 #include <dEnc/dprf/Npr03SymDprf.h>
 #include <dEnc/dprf/Npr03AsymDprf.h>
 #include <dEnc/dprf/AsymAdapDprf.h>
-#include <dEnc/dprf/LWRSymDprf.h>
 #include <dEnc/dprf/LWRSymAdapDprf.h>
 #include <dEnc/dprf/MLWRSymAdapDprf.h>
-// #include <dEnc/dprf/MLWRSymDprf.h>
 #include <cryptoTools/Common/Finally.h>
 #include <cryptoTools/Common/Log.h>
 #include <cryptoTools/Network/IOService.h>
@@ -237,39 +235,6 @@ void AmmrAsymMalClient_encDec_test()
         dprfs[i].init(i, m, e.mRequestChls, e.mListenChls, prng.get<block>(), type, mk.mKeyShares[i], mk.mCommits);
         encs[i].init(i, prng.get<block>(), &dprfs[i]);
     }
-
-    test_ammr(trials, prng, n, encs);
-}
-
-void MyLWRSymClient_encDec_test(){
-	oc::setThreadName("__myThread__");
-	u64 n = 4;
-	u64 m = 2;
-	u64 trials = 4;
-
-	oc::IOService ios;
-	std::vector<GroupChannel> eps(n);
-	std::vector<AmmrClient<LWRSymDprf>> encs(n);
-	std::vector<LWRSymDprf> dprfs(n);
-
-	oc::Finally f([&]() {
-		for (u64 i = 0; i < n; ++i)
-			encs[i].close();
-	});
-
-	for (u64 i = 0; i < n; ++i)
-		eps[i].connect(i, n, ios);
-
-    PRNG prng(oc::ZeroBlock);
-    LWRSymDprf::KeyGen(n, m);
-
-	for (u64 i = 0; i < n; ++i)
-	{
-		auto& e = eps[i];
-
-        dprfs[i].init(i, e.mRequestChls, e.mListenChls);
-		encs[i].init(i, prng.get<block>(), &dprfs[i]);
-	}
 
     test_ammr(trials, prng, n, encs);
 }
