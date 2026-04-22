@@ -340,7 +340,7 @@ int main(int argc, char** argv)
         int n = cmd.get<int>("total");
         int m = cmd.get<int>("thr");
         if(cmd.isSet("ld")){
-            compare_partial_evaluations_AdapLWR(2, m, n, 64, 42); //q = 2^64, q1 = 2^42
+            compare_partial_evaluations_AdapLWR(2, m, n, 64, 38); //q = 2^64, q1 = 2^38
         }
         else if(cmd.isSet("ss")){
             compare_partial_evaluations_NPRSym(2, m, n);
@@ -352,7 +352,7 @@ int main(int argc, char** argv)
             compare_partial_evaluations_ASymAdap(2, m, n);
         }
         else if(cmd.isSet("md")){
-            compare_partial_evaluations_AdapMLWR_batch(2, m, n, 64, 42); //q = 2^64, q1 = 2^42
+            compare_partial_evaluations_AdapMLWR_batch(2, m, n, 64, 38); //q = 2^64, q1 = 2^38
         }
         else if(cmd.isSet("ed")){
             compare_partial_evaluations_AdapLWE(2, m, n, 32, 28); //q = 2^32, q1 = 2^28

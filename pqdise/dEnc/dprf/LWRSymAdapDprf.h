@@ -34,7 +34,7 @@ namespace dEnc{
         // Two moduli of LWR
         static const int logq = 64, logp = 10;
         // Modulus for partial evaluation
-        static const int logq1 = 42;
+        static const int logq1 = 38;
 
         // length of LWRKey vector
         static const int dim = 1024;
