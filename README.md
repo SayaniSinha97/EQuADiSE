@@ -1,7 +1,7 @@
 # EQuADiSE
 EQuADiSE is the abbreviation for Efficient Quantum-safe Adaptive Distributed Symmetric-key Encryption. It improves upon the existing DiSE protocol introduced by Agrawal et al. in CCS 2018 [1]. Distributed PRF (DPRF) is an important building block of DiSE. We use adaptively secure quantum-safe DPRF in order to obtain EQuADiSE from DiSE. Our proposed DPRF is based on Module Learning with Rounding (MLWR) assumption.
 
-In our implementation, we provide DPRF instantiated with (i) adaptive LWE-based DPRF (from [2]), (iii) adaptive DDH-based DPRF (from [3]), (iv) our proposed adaptive LWR-based DPRF and, (v) our proposed adaptive MLWR-based DPRF. We also provide DPRF implementation of threshold FHE-based DPRF (from [4]).
+In our implementation, we provide DPRF instantiated with (i) AES-based DPRF (from [1]), (ii) DDH-based DPRF (from [1]), (iii) adaptive LWE-based DPRF (from [2]), (iv) adaptive DDH-based DPRF (from [3]), (v) our proposed adaptive LWR-based DPRF and, (vi) our proposed adaptive MLWR-based DPRF. We also provide DPRF implementation of threshold FHE-based DPRF (from [4]).
 
 # pqdise
 This is built over the existing DiSE library and has a dependency on cryptoTools library as well. After cloning the repository, go to the specific folder and then run the following commands on a Linux terminal.
